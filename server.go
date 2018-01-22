@@ -62,53 +62,12 @@ func main() {
 					tx.Rollback()
 					fmt.Println(error)
 					c.Status(http.StatusInternalServerError)
+					os.Exit(1) // TODO: Remove after debug
 				}
 
 				/**
 				 **** TABLES ****
 				 */
-
-				/**
-				 * Type statement
-				 */
-				// Preparation
-				eventStmt, err := tx.Prepare("INSERT INTO event(date, type, rating, local, owned) VALUES(?, ?, ?, ?, ?)")
-				defer eventStmt.Close()
-				if err != nil {
-					rollback(err.Error())
-					return
-				}
-
-				var eventType string
-				if event.IsMediaPlay() {
-					eventType = "play"
-				} else if event.IsMediaPause() {
-					eventType = "pause"
-				} else if event.IsMediaResume() {
-					eventType = "resume"
-				} else if event.IsMediaStop() {
-					eventType = "stop"
-				} else if event.IsMediaRating() {
-					eventType = "userRating"
-				} else if event.IsMediaScrobble() {
-					eventType = "scrobble"
-				} else {
-					rollback(fmt.Sprintf("Unknown event type '%s'", event.Type))
-					return
-				}
-
-				// Execution
-				eventResult, err := eventStmt.Exec(t.Format(time.RFC3339), eventType, event.Rating, event.Player.Local, event.Owned)
-				if err != nil {
-					rollback(err.Error())
-					return
-				}
-				// Get primary key
-				eventId, err := eventResult.LastInsertId()
-				if err != nil {
-					rollback(err.Error())
-					return
-				}
 
 				/**
 				 * Server statement
@@ -206,26 +165,26 @@ func main() {
 				 * Client statement
 				 */
 				// Try to update
-				clientUpdateStmt, err := tx.Prepare("UPDATE OR FAIL client SET `name`= ?, lastAddressId = ? WHERE uuid = ?")
+				clientUpdateStmt, err := tx.Prepare("UPDATE OR FAIL client SET `name`= ? WHERE uuid = ?")
 				defer clientUpdateStmt.Close()
 				if err != nil {
 					rollback(err.Error())
 					return
 				}
-				clientUpdateResult, err := clientUpdateStmt.Exec(event.Player.Name, addressId, event.Player.UUID)
+				clientUpdateResult, err := clientUpdateStmt.Exec(event.Player.Name, event.Player.UUID)
 				if err != nil {
 					rollback(err.Error())
 					return
 				}
 				if clientUpdateRowCount, err := clientUpdateResult.RowsAffected(); err != nil || clientUpdateRowCount == 0 {
 					// Insert new client
-					clientStmt, err := tx.Prepare("INSERT INTO client(uuid, `name`, lastAddressId) VALUES(?, ?, ?)")
+					clientStmt, err := tx.Prepare("INSERT INTO client(uuid, `name`) VALUES(?, ?)")
 					defer clientStmt.Close()
 					if err != nil {
 						rollback(err.Error())
 						return
 					}
-					_, err = clientStmt.Exec(event.Player.UUID, event.Player.Name, addressId)
+					_, err = clientStmt.Exec(event.Player.UUID, event.Player.Name)
 					if err != nil {
 						rollback(err.Error())
 						return
@@ -270,18 +229,54 @@ func main() {
 
 				// Try to update
 				mediaUpdateStmt, err := tx.Prepare("UPDATE OR FAIL media SET " +
-					"title = ?," +
-					"desc = ?," +
-					"type = ?," +
-					"subtype = ?," +
-					"contentRating = ?," +
-					"webRating = ?," +
-					"thumbnail = ?," +
-					"art = ?," +
-					"releaseYear = ?," +
-					"dateOriginal = ?," +
-					"dateAdded = ?," +
-					"dateUpdated = ?" +
+					"type = ?, " +
+					"subtype = ?, " +
+
+					"key = ?, " +
+					"parentKey = ?, " +
+					"grandparentKey = ?, " +
+					"primaryExtraKey = ?, " +
+
+					"title = ?, " +
+					"titleSort = ?, " +
+					"parentTitle = ?, " +
+					"grandparentTitle = ?, " +
+
+					"summary = ?, " +
+					"duration = ?, " +
+
+					"thumb = ?, " +
+					"parentThumb = ?, " +
+					"grandparentThumb = ?, " +
+
+					"grandparentTheme = ?, " +
+					"grandparentRatingKey = ?, " +
+
+					"art = ?, " +
+					"grandparentArt = ?, " +
+
+					"`index` = ?, " +
+					"parentIndex = ?, " +
+
+					"studio = ?, " +
+					"tagline = ?, " +
+					"chapterSource = ?, " +
+
+					"librarySectionID = ?, " +
+					"librarySectionKey = ?, " +
+					"librarySectionType = ?, " +
+
+					"webRating = ?, " +
+					"userRating = ?, " +
+					"audienceRating = ?, " +
+					"contentRating = ?, " +
+					"ratingImage = ?, " +
+					"viewCount = ?, " +
+
+					"releaseYear = ?, " +
+					"dateOriginal = ?, " +
+					"dateAdded = ?, " +
+					"dateUpdated = ? " +
 					" WHERE guid = ?")
 				defer mediaUpdateStmt.Close()
 				if err != nil {
@@ -290,10 +285,56 @@ func main() {
 				}
 
 				mediaUpdateResult, err := mediaUpdateStmt.Exec(
-					event.Metadata.Title, event.Metadata.Summary, mediaType, subType,
-					event.Metadata.ContentRating, event.Metadata.WebRating, event.Metadata.Thumb, event.Metadata.Art,
-					event.Metadata.ReleaseYear, dateOriginalRFC3339, event.Metadata.AddedAt().Format(time.RFC3339),
-					event.Metadata.UpdatedAt().Format(time.RFC3339), event.Metadata.GUID)
+					mediaType,
+					subType,
+
+					event.Metadata.Key,
+					event.Metadata.ParentKey,
+					event.Metadata.GrandparentKey,
+					event.Metadata.PrimaryExtraKey,
+
+					event.Metadata.Title,
+					event.Metadata.TitleSort,
+					event.Metadata.ParentTitle,
+					event.Metadata.GrandparentTitle,
+
+					event.Metadata.Summary,
+					event.Metadata.Duration,
+
+					event.Metadata.Thumb,
+					event.Metadata.ParentThumb,
+					event.Metadata.GrandparentThumb,
+
+					event.Metadata.GrandparentTheme,
+					event.Metadata.GrandparentRatingKey,
+
+					event.Metadata.Art,
+					event.Metadata.GrandparentArt,
+
+					event.Metadata.Index,
+					event.Metadata.ParentIndex,
+
+					event.Metadata.Studio,
+					event.Metadata.Tagline,
+					event.Metadata.ChapterSource,
+
+					event.Metadata.LibrarySectionID,
+					event.Metadata.LibrarySectionKey,
+					event.Metadata.LibrarySectionType,
+
+					event.Metadata.WebRating,
+					event.Metadata.UserRating,
+					event.Metadata.AudienceRating,
+					event.Metadata.ContentRating,
+					event.Metadata.RatingImage,
+					event.Metadata.ViewCount,
+
+					event.Metadata.ReleaseYear,
+					dateOriginalRFC3339,
+					event.Metadata.AddedAt().Format(time.RFC3339),
+					event.Metadata.UpdatedAt().Format(time.RFC3339),
+
+					event.Metadata.GUID)
 				if err != nil {
 					rollback(err.Error())
 					return
@@ -302,18 +343,112 @@ func main() {
 				if mediaUpdateRowCount, err := mediaUpdateResult.RowsAffected(); err != nil || mediaUpdateRowCount == 0 {
 					// Insert new event
 					mediaStmt, err := tx.Prepare("INSERT INTO media(" +
-						"guid, title, `desc`, type, subtype, contentRating, webRating, thumbnail, art, releaseYear, " +
-						"dateOriginal, dateAdded, dateUpdated" +
-						") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+						"guid, " +
+
+						"type, " +
+						"subtype, " +
+
+						"key, " +
+						"parentKey, " +
+						"grandparentKey, " +
+						"primaryExtraKey, " +
+
+						"title, " +
+						"titleSort, " +
+						"parentTitle, " +
+						"grandparentTitle, " +
+
+						"summary, " +
+						"duration, " +
+
+						"thumb, " +
+						"parentThumb, " +
+						"grandparentThumb, " +
+
+						"grandparentTheme, " +
+						"grandparentRatingKey, " +
+
+						"art, " +
+						"grandparentArt, " +
+
+						"`index`, " +
+						"parentIndex, " +
+
+						"studio, " +
+						"tagline, " +
+						"chapterSource, " +
+
+						"librarySectionID, " +
+						"librarySectionKey, " +
+						"librarySectionType, " +
+
+						"webRating, " +
+						"userRating, " +
+						"audienceRating, " +
+						"contentRating, " +
+						"ratingImage, " +
+						"viewCount, " +
+
+						"releaseYear, " +
+						"dateOriginal, " +
+						"dateAdded, " +
+						"dateUpdated" +
+						") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 					defer mediaStmt.Close()
 					if err != nil {
 						rollback(err.Error())
 						return
 					}
-					_, err = mediaStmt.Exec(event.Metadata.GUID,
-						event.Metadata.Title, event.Metadata.Summary, mediaType, subType,
-						event.Metadata.ContentRating, event.Metadata.WebRating, event.Metadata.Thumb, event.Metadata.Art,
-						event.Metadata.ReleaseYear, dateOriginalRFC3339, event.Metadata.AddedAt().Format(time.RFC3339),
+					_, err = mediaStmt.Exec(
+						event.Metadata.GUID,
+
+						mediaType,
+						subType,
+
+						event.Metadata.Key,
+						event.Metadata.ParentKey,
+						event.Metadata.GrandparentKey,
+						event.Metadata.PrimaryExtraKey,
+
+						event.Metadata.Title,
+						event.Metadata.TitleSort,
+						event.Metadata.ParentTitle,
+						event.Metadata.GrandparentTitle,
+
+						event.Metadata.Summary,
+						event.Metadata.Duration,
+
+						event.Metadata.Thumb,
+						event.Metadata.ParentThumb,
+						event.Metadata.GrandparentThumb,
+
+						event.Metadata.GrandparentTheme,
+						event.Metadata.GrandparentRatingKey,
+
+						event.Metadata.Art,
+						event.Metadata.GrandparentArt,
+
+						event.Metadata.Index,
+						event.Metadata.ParentIndex,
+
+						event.Metadata.Studio,
+						event.Metadata.Tagline,
+						event.Metadata.ChapterSource,
+
+						event.Metadata.LibrarySectionID,
+						event.Metadata.LibrarySectionKey,
+						event.Metadata.LibrarySectionType,
+
+						event.Metadata.WebRating,
+						event.Metadata.UserRating,
+						event.Metadata.AudienceRating,
+						event.Metadata.ContentRating,
+						event.Metadata.RatingImage,
+						event.Metadata.ViewCount,
+
+						event.Metadata.ReleaseYear,
+						dateOriginalRFC3339,
+						event.Metadata.AddedAt().Format(time.RFC3339),
 						event.Metadata.UpdatedAt().Format(time.RFC3339))
 					if err != nil {
 						rollback(err.Error())
@@ -322,67 +457,107 @@ func main() {
 				}
 
 				/**
-				 **** RELATIONS ****
+				 * Event statement
 				 */
+				// Preparation
+				var eventType string
+				if event.IsMediaPlay() {
+					eventType = "play"
+				} else if event.IsMediaPause() {
+					eventType = "pause"
+				} else if event.IsMediaResume() {
+					eventType = "resume"
+				} else if event.IsMediaStop() {
+					eventType = "stop"
+				} else if event.IsMediaRating() {
+					eventType = "userRating"
+				} else if event.IsMediaScrobble() {
+					eventType = "scrobble"
+				} else {
+					rollback(fmt.Sprintf("Unknown event type '%s'", event.Type))
+					return
+				}
 
-				/**
-				 * triggeredEvent statement
-				 */
-				triggeredEventStmt, err := tx.Prepare("INSERT INTO triggeredEvent(plexNumber, uuid, eId) VALUES(?, ?, ?)")
-				defer triggeredEventStmt.Close()
-				if err != nil {
-					rollback(err.Error())
-					return
-				}
-				_, err = triggeredEventStmt.Exec(event.Account.ID, event.Server.UUID, eventId)
-				if err != nil {
-					rollback(err.Error())
-					return
-				}
-
-				/**
-				 * usedMedia statement
-				 */
-				usedMediaStmt, err := tx.Prepare("INSERT INTO usedMedia(eId, guid) VALUES(?, ?)")
-				defer usedMediaStmt.Close()
-				if err != nil {
-					rollback(err.Error())
-					return
-				}
-				_, err = usedMediaStmt.Exec(eventId, event.Metadata.GUID)
+				eventStmt, err := tx.Prepare("INSERT INTO event(date, type, rating, local, owned," +
+					"accountNumber, sUUID, cUUID, mGUID, aId) " +
+					"VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+				defer eventStmt.Close()
 				if err != nil {
 					rollback(err.Error())
 					return
 				}
 
-				/**
-				 * usedClient statement
-				 */
-				usedClientStmt, err := tx.Prepare("INSERT INTO usedClient(eId, uuid) VALUES(?, ?)")
-				defer usedClientStmt.Close()
-				if err != nil {
-					rollback(err.Error())
-					return
-				}
-				_, err = usedClientStmt.Exec(eventId, event.Player.UUID)
+				// Execution
+				_, err = eventStmt.Exec(t.Format(time.RFC3339), eventType, event.Rating, event.Player.Local,
+					event.Owned, event.Account.ID, event.Server.UUID, event.Player.UUID, event.Metadata.GUID, addressId)
 				if err != nil {
 					rollback(err.Error())
 					return
 				}
 
 				/**
-				 * clientUsedAddress statement
+				 * filter statements and relations
 				 */
-				clientUsedAddressStmt, err := tx.Prepare("INSERT OR IGNORE INTO clientUsedAddress(uuid, aId) VALUES(?, ?)")
-				defer clientUsedAddressStmt.Close()
-				if err != nil {
-					rollback(err.Error())
-					return
+				filterRelations := map[string][]Filter{
+					"hasDirector":    event.Metadata.Director,
+					"hasProducer":    event.Metadata.Producer,
+					"isSimilarWith":  event.Metadata.Similar,
+					"hasWriter":      event.Metadata.Writer,
+					"hasRole":        event.Metadata.Role,
+					"hasGenre":       event.Metadata.Genre,
+					"isFromCountry":  event.Metadata.Country,
+					"isInCollection": event.Metadata.Collection,
 				}
-				_, err = clientUsedAddressStmt.Exec(event.Player.UUID, addressId)
-				if err != nil {
-					rollback(err.Error())
-					return
+				// Walk trough filter relations
+				for relationTable, filters := range filterRelations {
+					for _, filter := range filters {
+						/*
+						 * Since we use defer inside a for loop we need to encapsulate this
+						 * https://blog.zkanda.io/defer-inside-a-for-loop/
+						 */
+						func() {
+							// Try to update
+							filterUpdateStmt, err := tx.Prepare("UPDATE OR FAIL filter SET " +
+								"tag = ?, filter = ?, role = ?, thumb = ?, count = ? WHERE fId = ?")
+							defer filterUpdateStmt.Close()
+							if err != nil {
+								rollback(err.Error())
+								return
+							}
+							filterUpdateResult, err := filterUpdateStmt.Exec(filter.Tag, filter.Filter, filter.Role, filter.Thumb, filter.Count, filter.Id)
+							if err != nil {
+								rollback(err.Error())
+								return
+							}
+							if filterUpdateRowCount, err := filterUpdateResult.RowsAffected(); err != nil || filterUpdateRowCount == 0 {
+								// Insert new filter
+								filterStmt, err := tx.Prepare("INSERT INTO filter(fId, tag, filter, role, thumb, count) " +
+									"VALUES(?, ?, ?, ?, ?, ?)")
+								defer filterStmt.Close()
+								if err != nil {
+									rollback(err.Error())
+									return
+								}
+								_, err = filterStmt.Exec(filter.Id, filter.Tag, filter.Filter, filter.Role, filter.Thumb, filter.Count)
+								if err != nil {
+									rollback(err.Error())
+									return
+								}
+							}
+							// Add relation
+							relationStmt, err := tx.Prepare(fmt.Sprintf("INSERT OR IGNORE INTO %s(guid, fId) VALUES(?, ?)", relationTable))
+							defer relationStmt.Close()
+							if err != nil {
+								rollback(err.Error())
+								return
+							}
+							_, err = relationStmt.Exec(event.Metadata.GUID, filter.Id)
+							if err != nil {
+								rollback(err.Error())
+								return
+							}
+						}()
+					}
 				}
 
 				// Commit the transaction

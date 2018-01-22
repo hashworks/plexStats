@@ -74,52 +74,65 @@ type Player struct {
 }
 
 type Metadata struct {
-	GUID                            string   `json:"guid" binding:"required"`
-	Key                             string   `json:"key" binding:"required"`
-	Type                            string   `json:"type" binding:"required"`
-	Title                           string   `json:"title" binding:"required"`
-	SubType                         string   `json:"subtype"`
-	ViewCount                       int      `json:"viewCount"`
-	Studio                          string   `json:"studio"`
-	Thumb                           string   `json:"thumb"`
-	WebRating                       float32  `json:"rating"`
-	UserRating                      float32  `json:"userRating"`
-	Summary                         string   `json:"summary"`
-	ParentTitle                     string   `json:"parentTitle"`
-	GrandparentRatingKey            int      `json:"grandparentRatingKey,string"`
-	Index                           int      `json:"index"`
-	GrandparentThumb                string   `json:"grandparentThumb"`
-	ParentKey                       string   `json:"parentKey"`
-	GrandparentTheme                string   `json:"grandparentTheme"`
-	Art                             string   `json:"art"`
-	GrandparentTitle                string   `json:"grandparentTitle"`
-	UpdatedAtTimestamp              int64    `json:"updatedAt"`
-	TitleSort                       string   `json:"titleSort"`
-	OriginallyAvailableAtDateString string   `json:"originallyAvailableAt"`
-	AddedAtTimestamp                int64    `json:"addedAt"`
-	ContentRating                   string   `json:"contentRating"`
-	ParentIndex                     int      `json:"parentIndex"`
-	GrandparentArt                  string   `json:"grandparentArt"`
-	GrandparentKey                  string   `json:"grandparentKey"`
-	LibrarySectionType              string   `json:"librarySectionType"`
-	LibrarySectionID                int      `json:"librarySectionID"`
-	ReleaseYear                     int      `json:"year"`
-	LibrarySectionKey               string   `json:"librarySectionKey"`
-	ParentThumb                     string   `json:"parentThumb"`
-	ChapterSource                   string   `json:"chapterSource"`
-	PrimaryExtraKey                 string   `json:"primaryExtraKey"`
-	Tagline                         string   `json:"tagline"`
-	Duration                        int      `json:"duration"`
-	AudienceRating                  float32  `json:"audienceRating"`
-	RatingImage                     string   `json:"ratingImage"`
-	Director                        []Filter `json:"director"`
-	Producer                        []Filter `json:"Producer"`
-	Similar                         []Filter `json:"Similar"`
-	Writer                          []Filter `json:"Writer"`
-	Role                            []Filter `json:"Role"`
-	Genre                           []Filter `json:"Genre"`
-	Country                         []Filter `json:"Country"`
-	Collection                      []Filter `json:"Collection"`
+	GUID string `json:"guid" binding:"required"`
+
+	Type    string `json:"type" binding:"required"`
+	SubType string `json:"subtype"`
+
+	Key             string `json:"key" binding:"required"`
+	ParentKey       string `json:"parentKey"`
+	GrandparentKey  string `json:"grandparentKey"`
+	PrimaryExtraKey string `json:"primaryExtraKey"`
+
+	Title            string `json:"title" binding:"required"`
+	TitleSort        string `json:"titleSort"`
+	ParentTitle      string `json:"parentTitle"`
+	GrandparentTitle string `json:"grandparentTitle"`
+
+	Summary  string `json:"summary"`
+	Duration int    `json:"duration"`
+
+	Thumb            string `json:"thumb"`
+	ParentThumb      string `json:"parentThumb"`
+	GrandparentThumb string `json:"grandparentThumb"`
+
+	GrandparentTheme     string `json:"grandparentTheme"`
+	GrandparentRatingKey int    `json:"grandparentRatingKey,string"`
+
+	Art            string `json:"art"`
+	GrandparentArt string `json:"grandparentArt"`
+
+	Index       int `json:"index"`
+	ParentIndex int `json:"parentIndex"`
+
+	Studio        string `json:"studio"`
+	Tagline       string `json:"tagline"`
+	ChapterSource string `json:"chapterSource"`
+
+	LibrarySectionID   int    `json:"librarySectionID"`
+	LibrarySectionKey  string `json:"librarySectionKey"`
+	LibrarySectionType string `json:"librarySectionType"`
+
+	WebRating      float32 `json:"rating"`
+	UserRating     float32 `json:"userRating"`
+	AudienceRating float32 `json:"audienceRating"`
+	ContentRating  string  `json:"contentRating"`
+	RatingImage    string  `json:"ratingImage"`
+	ViewCount      int     `json:"viewCount"`
+
+	ReleaseYear                     int    `json:"year"`
+	OriginallyAvailableAtDateString string `json:"originallyAvailableAt"`
+	AddedAtTimestamp                int64  `json:"addedAt"`
+	UpdatedAtTimestamp              int64  `json:"updatedAt"`
+
+	Director   []Filter `json:"director"`
+	Producer   []Filter `json:"Producer"`
+	Writer     []Filter `json:"Writer"`
+	Role       []Filter `json:"Role"`
+	Similar    []Filter `json:"Similar"`
+	Genre      []Filter `json:"Genre"`
+	Country    []Filter `json:"Country"`
+	Collection []Filter `json:"Collection"`
 }
 
 func (m Metadata) IsEpisode() bool {
