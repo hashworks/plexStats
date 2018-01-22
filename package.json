@@ -1,0 +1,6 @@
+{
+  "name": "plexStats",
+  "dependencies": {
+    "chart.js": "^2.7.1"
+  }
+}
