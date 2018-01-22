@@ -20,8 +20,6 @@ func (s server) playsByHourHandler(c *gin.Context) {
 	if usernamesParam != "" {
 		usernames = strings.Split(usernamesParam, "/")
 	}
-	fmt.Println(strings.Trim(c.Param("usernames"), "/"))
-	fmt.Println(len(usernames))
 
 	var queryBuffer bytes.Buffer
 	if len(usernames) > 0 {
@@ -45,8 +43,6 @@ func (s server) playsByHourHandler(c *gin.Context) {
 	} else {
 		queryBuffer.WriteString("SELECT * FROM playsByHour")
 	}
-
-	fmt.Println(queryBuffer.String())
 
 	rows, err := s.db.Query(queryBuffer.String())
 	if err != nil {
