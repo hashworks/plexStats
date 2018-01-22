@@ -31,10 +31,10 @@ func main() {
 	s.router = gin.Default()
 
 	s.router.StaticFile("/scripts/Chart.min.js", "node_modules/chart.js/dist/Chart.min.js")
-	//s.router.LoadHTMLGlob("templates/*")
-	s.router.LoadHTMLFiles("templates/index.tmpl")
+	s.router.StaticFile("/", "static/index.html")
+	s.router.LoadHTMLGlob("templates/*.html")
 
-	s.router.GET("/", s.frontendHandler)
+	s.router.GET("/playsByHour/*usernames", s.playsByHourHandler)
 	s.router.POST("/webhook", s.backendHandler)
 
 	s.router.Run(":8080")
