@@ -128,6 +128,7 @@ func (s server) playsByTimeHandler(c *gin.Context) {
 	c.HTML(http.StatusOK, "playsByTime", gin.H{
 		"title":             "Plays By Time",
 		"usernames":         allUsernames,
+		"playsByTimeTab":    true,
 		"playsByMonthLabel": playsByMonthLabel,
 		"playsByMonthData":  playsByMonthData,
 		"playsByHourData":   playsByHourData,

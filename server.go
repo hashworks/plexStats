@@ -7,8 +7,10 @@ import (
 	// Fix: go get -u github.com/mattn/go-isatty
 
 	"database/sql"
+	"errors"
 	"github.com/gchaincl/dotsql"
 	_ "github.com/mattn/go-sqlite3"
+	"html/template"
 	"net/http"
 	"os"
 )
@@ -91,6 +93,22 @@ func main() {
 	s.router.StaticFile("/scripts/Chart.min.js", "node_modules/chart.js/dist/Chart.min.js")
 	s.router.StaticFile("/css/main.css", "css/main.css")
 	s.router.Static("/fonts/", "fonts/")
+	s.router.SetFuncMap(template.FuncMap{
+		"dict": func(values ...interface{}) (map[string]interface{}, error) {
+			if len(values)%2 != 0 {
+				return nil, errors.New("invalid dict call")
+			}
+			dict := make(map[string]interface{}, len(values)/2)
+			for i := 0; i < len(values); i += 2 {
+				key, ok := values[i].(string)
+				if !ok {
+					return nil, errors.New("dict keys must be strings")
+				}
+				dict[key] = values[i+1]
+			}
+			return dict, nil
+		},
+	})
 	s.router.LoadHTMLGlob("templates/*.html")
 
 	s.router.GET("/", s.indexHandler)

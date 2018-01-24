@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>PlexStats {{ .title }}</title>
+	<title>PlexStats{{ if .Title }} - {{ .Title }}{{ end }}</title>
 	<meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
 	<meta name="mobile-web-app-capable" content="yes">
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -22,10 +22,10 @@
 		<a href="/">PlexStats</a>
 	</div>
 	<nav id="menu">
-		<a href="/playsByTime" class="entry">
+		<a href="/playsByTime" class="entry{{ if .PlayByTimeTab }} active{{ end }}">
 			Plays By Time
 		</a>
-		<a href="/comparePlays" class="entry">
+		<a href="/comparePlays" class="entry{{ if .ComparePlayTab }} active{{ end }}">
 			Compare Plays By Hour
 		</a>
 		<div id="menuBorder"></div>
