@@ -35,13 +35,6 @@ CREATE TABLE IF NOT EXISTS event(
   FOREIGN KEY(aId) REFERENCES address
 );
 
--- name: create-view-playsByHour
-CREATE VIEW IF NOT EXISTS playsByHour AS
-  SELECT
-    CAST(REPLACE(ROUND(REPLACE(SUBSTR(date,12,5),':','.')+0.2), 24, 0) AS INTEGER) AS hour,
-    COUNT(eId) as count
-  FROM event WHERE type IS 'play' GROUP BY hour;
-
 -- name: create-trigger-rating
 CREATE TRIGGER IF NOT EXISTS ratingTrigger AFTER INSERT ON event -- When type isn't userRating we want rating to be NULL
   WHEN NEW.type IS NOT 'userRating' AND NEW.rating IS NOT NULL BEGIN

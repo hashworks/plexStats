@@ -7,23 +7,45 @@ import (
 	// Fix: go get -u github.com/mattn/go-isatty
 
 	"database/sql"
-	"flag"
 	"github.com/gchaincl/dotsql"
 	_ "github.com/mattn/go-sqlite3"
+	"net/http"
 	"os"
 )
 
 type server struct {
-	db     *sql.DB
-	router *gin.Engine
+	dotAlter  *dotsql.DotSql
+	dotSelect *dotsql.DotSql
+	db        *sql.DB
+	router    *gin.Engine
 }
 
 func main() {
-	flag.Parse()
-
 	var s server
 	var err error
 
+	// Load init commands
+	dotInit, err := dotsql.LoadFromFile("sql/init.sql")
+	if err != nil {
+		fmt.Printf("Failed to open the database init file: %s\n", err.Error())
+		os.Exit(1)
+	}
+
+	// Load alter commands
+	s.dotAlter, err = dotsql.LoadFromFile("sql/alter.sql")
+	if err != nil {
+		fmt.Printf("Failed to open the database alter command file: %s\n", err.Error())
+		os.Exit(1)
+	}
+
+	// Load select commands
+	s.dotSelect, err = dotsql.LoadFromFile("sql/select.sql")
+	if err != nil {
+		fmt.Printf("Failed to open the database select command file: %s\n", err.Error())
+		os.Exit(1)
+	}
+
+	// Open database file
 	s.db, err = sql.Open("sqlite3", "plex.db")
 	defer s.db.Close()
 	if err != nil {
@@ -32,10 +54,8 @@ func main() {
 	}
 
 	// Init database
-	dotInit, err := dotsql.LoadFromFile("sql/init.sql")
 	for _, command := range []string{
 		"create-table-event",
-		"create-view-playsByHour",
 		"create-trigger-rating",
 		"create-table-media",
 		"create-table-filter",
@@ -63,10 +83,15 @@ func main() {
 	s.router = gin.Default()
 
 	s.router.StaticFile("/scripts/Chart.min.js", "node_modules/chart.js/dist/Chart.min.js")
-	s.router.StaticFile("/", "static/index.html")
 	s.router.LoadHTMLGlob("templates/*.html")
 
+	s.router.GET("/", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "index", gin.H{
+			"title": "",
+		})
+	})
 	s.router.GET("/playsByHour/*usernames", s.playsByHourHandler)
+	s.router.GET("/playsByMonth/*usernames", s.playsByMonthHandler)
 	s.router.POST("/webhook", s.backendHandler)
 
 	s.router.Run(":8080")

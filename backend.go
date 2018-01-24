@@ -39,7 +39,7 @@ func (s server) backendHandler(c *gin.Context) {
 			 * Server statement
 			 */
 			// Try to update
-			serverUpdateStmt, err := tx.Prepare("UPDATE OR FAIL server SET `name` = ? WHERE uuid = ?")
+			serverUpdateStmt, err := s.dotAlter.Prepare(tx, "update-server")
 			defer serverUpdateStmt.Close()
 			if err != nil {
 				rollback(err.Error())
@@ -52,7 +52,7 @@ func (s server) backendHandler(c *gin.Context) {
 			}
 			if serverUpdateRowCount, err := serverUpdateResult.RowsAffected(); err != nil || serverUpdateRowCount == 0 {
 				// Insert new server
-				serverStmt, err := tx.Prepare("INSERT INTO server(uuid, `name`) VALUES(?, ?)")
+				serverStmt, err := s.dotAlter.Prepare(tx, "insert-server")
 				defer serverStmt.Close()
 				if err != nil {
 					rollback(err.Error())
@@ -69,7 +69,7 @@ func (s server) backendHandler(c *gin.Context) {
 			 * Account statement
 			 */
 			// Try to update
-			accountUpdateStmt, err := tx.Prepare("UPDATE OR FAIL account SET `name`= ?, thumbnail = ? WHERE plexnumber = ?")
+			accountUpdateStmt, err := s.dotAlter.Prepare(tx, "update-account")
 			defer accountUpdateStmt.Close()
 			if err != nil {
 				rollback(err.Error())
@@ -82,7 +82,7 @@ func (s server) backendHandler(c *gin.Context) {
 			}
 			if accountUpdateRowCount, err := accountUpdateResult.RowsAffected(); err != nil || accountUpdateRowCount == 0 {
 				// Insert new account
-				accountStmt, err := tx.Prepare("INSERT INTO account(plexNumber, `name`, thumbnail) VALUES(?, ?, ?)")
+				accountStmt, err := s.dotAlter.Prepare(tx, "insert-account")
 				defer accountStmt.Close()
 				if err != nil {
 					rollback(err.Error())
@@ -100,7 +100,7 @@ func (s server) backendHandler(c *gin.Context) {
 			 */
 			// Check if IP exists already
 			var addressId int64
-			lastAddressQuery, err := tx.Prepare("SELECT aId FROM address WHERE ip = ? LIMIT 1")
+			lastAddressQuery, err := s.dotAlter.Prepare(tx, "select-address-id-by-ip")
 			defer lastAddressQuery.Close()
 			if err != nil {
 				rollback(err.Error())
@@ -109,7 +109,7 @@ func (s server) backendHandler(c *gin.Context) {
 			err = lastAddressQuery.QueryRow(event.Player.Address).Scan(&addressId)
 			if err != nil {
 				// Insert otherwise
-				addressStmt, err := tx.Prepare("INSERT INTO address(ip) VALUES(?)")
+				addressStmt, err := s.dotAlter.Prepare(tx, "insert-address")
 				defer addressStmt.Close()
 				if err != nil {
 					rollback(err.Error())
@@ -131,7 +131,7 @@ func (s server) backendHandler(c *gin.Context) {
 			 * Client statement
 			 */
 			// Try to update
-			clientUpdateStmt, err := tx.Prepare("UPDATE OR FAIL client SET `name`= ? WHERE uuid = ?")
+			clientUpdateStmt, err := s.dotAlter.Prepare(tx, "update-client")
 			defer clientUpdateStmt.Close()
 			if err != nil {
 				rollback(err.Error())
@@ -144,7 +144,7 @@ func (s server) backendHandler(c *gin.Context) {
 			}
 			if clientUpdateRowCount, err := clientUpdateResult.RowsAffected(); err != nil || clientUpdateRowCount == 0 {
 				// Insert new client
-				clientStmt, err := tx.Prepare("INSERT INTO client(uuid, `name`) VALUES(?, ?)")
+				clientStmt, err := s.dotAlter.Prepare(tx, "insert-client")
 				defer clientStmt.Close()
 				if err != nil {
 					rollback(err.Error())
@@ -194,56 +194,7 @@ func (s server) backendHandler(c *gin.Context) {
 			}
 
 			// Try to update
-			mediaUpdateStmt, err := tx.Prepare("UPDATE OR FAIL media SET " +
-				"type = ?, " +
-				"subtype = ?, " +
-
-				"key = ?, " +
-				"parentKey = ?, " +
-				"grandparentKey = ?, " +
-				"primaryExtraKey = ?, " +
-
-				"title = ?, " +
-				"titleSort = ?, " +
-				"parentTitle = ?, " +
-				"grandparentTitle = ?, " +
-
-				"summary = ?, " +
-				"duration = ?, " +
-
-				"thumb = ?, " +
-				"parentThumb = ?, " +
-				"grandparentThumb = ?, " +
-
-				"grandparentTheme = ?, " +
-				"grandparentRatingKey = ?, " +
-
-				"art = ?, " +
-				"grandparentArt = ?, " +
-
-				"`index` = ?, " +
-				"parentIndex = ?, " +
-
-				"studio = ?, " +
-				"tagline = ?, " +
-				"chapterSource = ?, " +
-
-				"librarySectionID = ?, " +
-				"librarySectionKey = ?, " +
-				"librarySectionType = ?, " +
-
-				"webRating = ?, " +
-				"userRating = ?, " +
-				"audienceRating = ?, " +
-				"contentRating = ?, " +
-				"ratingImage = ?, " +
-				"viewCount = ?, " +
-
-				"releaseYear = ?, " +
-				"dateOriginal = ?, " +
-				"dateAdded = ?, " +
-				"dateUpdated = ? " +
-				" WHERE guid = ?")
+			mediaUpdateStmt, err := s.dotAlter.Prepare(tx, "update-media")
 			defer mediaUpdateStmt.Close()
 			if err != nil {
 				rollback(err.Error())
@@ -308,58 +259,7 @@ func (s server) backendHandler(c *gin.Context) {
 
 			if mediaUpdateRowCount, err := mediaUpdateResult.RowsAffected(); err != nil || mediaUpdateRowCount == 0 {
 				// Insert new event
-				mediaStmt, err := tx.Prepare("INSERT INTO media(" +
-					"guid, " +
-
-					"type, " +
-					"subtype, " +
-
-					"key, " +
-					"parentKey, " +
-					"grandparentKey, " +
-					"primaryExtraKey, " +
-
-					"title, " +
-					"titleSort, " +
-					"parentTitle, " +
-					"grandparentTitle, " +
-
-					"summary, " +
-					"duration, " +
-
-					"thumb, " +
-					"parentThumb, " +
-					"grandparentThumb, " +
-
-					"grandparentTheme, " +
-					"grandparentRatingKey, " +
-
-					"art, " +
-					"grandparentArt, " +
-
-					"`index`, " +
-					"parentIndex, " +
-
-					"studio, " +
-					"tagline, " +
-					"chapterSource, " +
-
-					"librarySectionID, " +
-					"librarySectionKey, " +
-					"librarySectionType, " +
-
-					"webRating, " +
-					"userRating, " +
-					"audienceRating, " +
-					"contentRating, " +
-					"ratingImage, " +
-					"viewCount, " +
-
-					"releaseYear, " +
-					"dateOriginal, " +
-					"dateAdded, " +
-					"dateUpdated" +
-					") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+				mediaStmt, err := s.dotAlter.Prepare(tx, "insert-media")
 				defer mediaStmt.Close()
 				if err != nil {
 					rollback(err.Error())
@@ -444,9 +344,7 @@ func (s server) backendHandler(c *gin.Context) {
 				return
 			}
 
-			eventStmt, err := tx.Prepare("INSERT INTO event(date, type, rating, local, owned," +
-				"accountNumber, sUUID, cUUID, mGUID, aId) " +
-				"VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+			eventStmt, err := s.dotAlter.Prepare(tx, "insert-event")
 			defer eventStmt.Close()
 			if err != nil {
 				rollback(err.Error())
@@ -483,8 +381,7 @@ func (s server) backendHandler(c *gin.Context) {
 					 */
 					func() {
 						// Try to update
-						filterUpdateStmt, err := tx.Prepare("UPDATE OR FAIL filter SET " +
-							"tag = ?, filter = ?, role = ?, thumb = ?, count = ? WHERE fId = ?")
+						filterUpdateStmt, err := s.dotAlter.Prepare(tx, "update-filter")
 						defer filterUpdateStmt.Close()
 						if err != nil {
 							rollback(err.Error())
@@ -497,8 +394,7 @@ func (s server) backendHandler(c *gin.Context) {
 						}
 						if filterUpdateRowCount, err := filterUpdateResult.RowsAffected(); err != nil || filterUpdateRowCount == 0 {
 							// Insert new filter
-							filterStmt, err := tx.Prepare("INSERT INTO filter(fId, tag, filter, role, thumb, count) " +
-								"VALUES(?, ?, ?, ?, ?, ?)")
+							filterStmt, err := s.dotAlter.Prepare(tx, "insert-filter")
 							defer filterStmt.Close()
 							if err != nil {
 								rollback(err.Error())
