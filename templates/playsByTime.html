@@ -1,0 +1,105 @@
+{{define "playsByTime"}}
+{{template "header"}}
+<div class="page">
+	<div class="cards">
+		<div class="card">
+			<canvas id="playsByHour" width="750" height="690"></canvas>
+			<script>
+				var ctx = document.getElementById("playsByHour");
+				new Chart(ctx, {
+					type: 'bar',
+					data: {
+						labels: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
+						datasets: [{
+							label: '# of plays by hour',
+							data: {{ .playsByHourData }},
+							borderWidth: 1,
+							backgroundColor: "#888"
+						}]
+					},
+					options: {
+						animation: {
+							duration: 0
+						},
+						responsive: true,
+						legend: {
+							labels: {
+								fontColor: "#fff"
+							}
+						},
+						scales: {
+							yAxes: [
+								{
+									ticks: {
+										fontColor: "#fff"
+									}
+								}],
+							xAxes: [
+								{
+									ticks: {
+										fontColor: "#fff"
+									}
+								}]
+						}
+					}
+				});
+			</script>
+		</div>
+
+		<div class="card">
+			<canvas id="playsByMonth" width="750" height="690"></canvas>
+			<script>
+				var ctx = document.getElementById("playsByMonth");
+				new Chart(ctx, {
+					type: 'bar',
+					data: {
+						labels: {{ .playsByMonthLabel }},
+						datasets: [{
+							label: '# of plays by month',
+							data: {{ .playsByMonthData }},
+							borderWidth: 1,
+							backgroundColor: "#888"
+						}]
+					},
+					options: {
+						animation: {
+							duration: 0
+						},
+						responsive: true,
+						legend: {
+							labels: {
+								fontColor: "#fff"
+							}
+						},
+						scales: {
+							yAxes: [
+								{
+									ticks: {
+										fontColor: "#fff"
+									}
+								}],
+							xAxes: [
+								{
+									ticks: {
+										fontColor: "#fff"
+									}
+								}]
+						}
+					}
+				});
+			</script>
+		</div>
+
+		<div class="card full">
+			<h3>Note</h3>
+			<p>You can limit the data by appending the following usernames, split by '/':</p>
+			<ul>
+			{{ range .usernames }}
+				<li><a href="/playsByTime/{{ . }}">{{ . }}</a></li>
+			{{ end }}
+			</ul>
+		</div>
+	</div>
+</div>
+{{template "footer"}}
+{{end}}

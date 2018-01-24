@@ -1,18 +1,34 @@
 {{define "index"}}
 {{template "header"}}
-<a href="/playsByHour">/playsByHour</a></br>
-<a href="/playsByHour/hashworks">/playsByHour/hashworks</a></br>
-<a href="/playsByHour/valentin">/playsByHour/valentin</a></br>
-<a href="/playsByHour/nilsrauso">/playsByHour/nilsrauso</a></br>
-<a href="/playsByHour/SimonTank">/playsByHour/SimonTank</a></br>
-<a href="/playsByHour/Sascha1986!">/playsByHour/Sascha1986!</a></br>
-<a href="/playsByHour/andy/Andy2704">/playsByHour/andy/Andy2704</a></br>
-<a href="/playsByMonth">/playsByMonth</a></br>
-<a href="/playsByMonth/hashworks">/playsByMonth/hashworks</a></br>
-<a href="/playsByMonth/valentin">/playsByMonth/valentin</a></br>
-<a href="/playsByMonth/nilsrauso">/playsByMonth/nilsrauso</a></br>
-<a href="/playsByMonth/SimonTank">/playsByMonth/SimonTank</a></br>
-<a href="/playsByMonth/Sascha1986!">/playsByMonth/Sascha1986!</a></br>
-<a href="/playsByMonth/andy/Andy2704">/playsByMonth/andy/Andy2704</a></br>
+
+<div class="page">
+	<div class="cards">
+		<div class="card">
+			<div class="tag">STAT</div>
+			<h3>{{ .eventCount }} events captured</h3>
+		</div>
+		<div class="card">
+			<div class="tag">STAT</div>
+			<h3>{{ .accountCount }} accounts added</h3>
+		</div>
+		<div class="card">
+			<div class="tag">STAT</div>
+			<h3>{{ .clientCount }} clients seen</h3>
+		</div>
+
+		<div class="card">
+			<div class="tag">STAT</div>
+			<h3>{{ .movieCount }} movies played</h3>
+		</div>
+		<div class="card">
+			<div class="tag">STAT</div>
+			<h3>{{ .episodeCount }} episodes played</h3>
+		</div>
+		<div class="card">
+			<div class="tag">STAT</div>
+			<h3>{{ .trackCount }} tracks played</h3>
+		</div>
+	</div>
+</div>
 {{template "footer"}}
 {{end}}

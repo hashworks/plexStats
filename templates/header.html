@@ -4,7 +4,33 @@
 <head>
 	<meta charset="UTF-8">
 	<title>PlexStats {{ .title }}</title>
+	<meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+	<meta name="mobile-web-app-capable" content="yes">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="description" content="/home/hashworks - Free programming since 1994." />
+	<meta name="apple-mobile-web-app-title" content="hashworksNET">
+	<meta name="application-name" content="hashworksNET">
+	<meta name="msapplication-TileColor" content="#222222">
+	<meta name="msapplication-TileImage" content="mstile-144x144.png">
+	<meta name="theme-color" content="#151515">
+	<link inline type="text/css" rel="stylesheet" href="/css/main.css">
 	<script src="/scripts/Chart.min.js"></script>
 </head>
 <body>
+<div id="header">
+	<div class="left  title">
+		<a href="/">PlexStats</a>
+	</div>
+	<nav id="menu">
+		<a href="/playsByTime" class="entry">
+			Plays By Time
+		</a>
+		<a href="/comparePlays" class="entry">
+			Compare Plays By Hour
+		</a>
+		<div id="menuBorder"></div>
+	</nav>
+</div>
+
+<div id="content">
 {{end}}

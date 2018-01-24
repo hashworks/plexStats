@@ -20,6 +20,12 @@ type server struct {
 	router    *gin.Engine
 }
 
+func (s server) internalServerError(c *gin.Context, err string) {
+	// TODO: Better error logging
+	fmt.Println(err)
+	c.Status(http.StatusInternalServerError)
+}
+
 func main() {
 	var s server
 	var err error
@@ -83,15 +89,12 @@ func main() {
 	s.router = gin.Default()
 
 	s.router.StaticFile("/scripts/Chart.min.js", "node_modules/chart.js/dist/Chart.min.js")
+	s.router.StaticFile("/css/main.css", "css/main.css")
+	s.router.Static("/fonts/", "fonts/")
 	s.router.LoadHTMLGlob("templates/*.html")
 
-	s.router.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "index", gin.H{
-			"title": "",
-		})
-	})
-	s.router.GET("/playsByHour/*usernames", s.playsByHourHandler)
-	s.router.GET("/playsByMonth/*usernames", s.playsByMonthHandler)
+	s.router.GET("/", s.indexHandler)
+	s.router.GET("/playsByTime/*usernames", s.playsByTimeHandler)
 	s.router.POST("/webhook", s.backendHandler)
 
 	s.router.Run(":8080")
