@@ -4,10 +4,11 @@ SELECT
       REPLACE(
           ROUND(
               REPLACE(
-                  SUBSTR(date,12,5),':','.')+0.2
+                  SUBSTR(date,12,5)
+              ,':','.')+0.2
           )
-          , 24, 0)
-      AS INTEGER) AS hour,
+      , 24, 0)
+  AS INTEGER) AS hour,
   COUNT(eId) as count
 FROM event WHERE type IS 'play' GROUP BY hour;
 

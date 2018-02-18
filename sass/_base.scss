@@ -1,0 +1,144 @@
+body {
+    background-color: $bgColor1;
+    font-family: 'Roboto', sans-serif;
+    color: $fgColorNormal;
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+}
+::selection {
+    background: $fgColorNormal;
+}
+::-moz-selection {
+    background: $fgColorNormal;
+}
+
+svg {
+    path {
+        fill: $fgColorNormal;
+        stroke: $fgColorNormal;
+    }
+}
+
+#header {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    min-height: $headerHeight;
+    width: 100%;
+    z-index: 5;
+    background-color: $bgColor3;
+    font-size: 1.3em;
+    box-shadow: 0 5px 5px 0 $shadowColor;
+
+    .title, #menu .entry {
+        padding: $headerHeight/3.5 $headerHeight/3.5 0;
+    }
+
+    .title {
+        padding-right: 30px;
+    }
+
+    .icons {
+        padding: $headerHeight/3.5 $headerHeight/3.5 0 0;
+    }
+
+    @media (max-width: $smallScreenMaxWidth) {
+        #menu {
+            min-width: 100%;
+        }
+    }
+
+    #menu {
+        display: flex;
+        position: relative;
+        .entry {
+            flex-grow: 1;
+            max-width: 300px;
+            text-align: center;
+            height: $headerHeight;
+            cursor: pointer;
+
+            &:not(.selected) {
+                opacity: 0.6;
+            }
+        }
+        .entry:hover {
+            opacity: 1;
+        }
+
+        #menuBorder {
+            $borderHeight: 3px;
+            position: absolute;
+            height: $borderHeight;
+            left: 0;
+            top: $headerHeight - $borderHeight;
+            background-color: $fgColorNormal;
+        }
+    }
+}
+
+#sideMenu {
+    position: fixed;
+//    top: $headerHeight;
+//    padding: 10px $contentSpacing;
+    padding: $contentSpacing;
+    top: 0;
+    right: 0;
+    height: 100%;
+    z-index: 10;
+    background-color: $bgColor3;
+    opacity: 0; // Opacity 0, so we can read the width of the element on load
+    box-shadow: 0 5px 5px 0 $shadowColor;
+
+    .entry {
+        display: block;
+        height: 40px;
+        .icon {
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        .title {
+            display: inline;
+            vertical-align: middle;
+        }
+    }
+}
+
+#content {
+    margin-top: $headerHeight;
+    .page {
+        height: auto !important;
+        padding: $contentSpacing !important;
+    }
+}
+@media (max-width: $smallScreenMaxWidth) {
+    #content {
+        margin-top: $headerHeight*1.75;
+    }
+}
+
+.cards {
+    display: flex;
+    flex-flow: row wrap;
+    margin-top: -$contentSpacing;
+    margin-left: -$contentSpacing;
+    .card {
+        flex-grow: 1;
+        width: 440px;
+        min-height: 250px;
+        margin-left: $contentSpacing;
+        margin-top: $contentSpacing;
+        padding: $contentSpacing;
+        background-color: $bgColor2;
+        box-shadow: -5px 5px 5px 0 $shadowColor;
+        .tag {
+            float: right;
+            margin-right: 10px;
+            margin-top: 3px;
+        }
+        &.full {
+            flex-grow: 2;
+            width: 100%;
+        }
+    }
+}
