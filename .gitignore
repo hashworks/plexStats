@@ -2,3 +2,4 @@ node_modules
 plex.db
 css
 bin
+bindata.go

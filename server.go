@@ -5,9 +5,10 @@ import (
 	"github.com/gin-gonic/gin"
 	// gin/logger.go might report undefined: isatty.IsCygwinTerminal
 	// Fix: go get -u github.com/mattn/go-isatty
+	"github.com/elazarl/go-bindata-assetfs"
+	"github.com/gin-contrib/multitemplate"
 
 	"database/sql"
-	"errors"
 	"github.com/gchaincl/dotsql"
 	_ "github.com/mattn/go-sqlite3"
 	"html/template"
@@ -33,24 +34,21 @@ func main() {
 	var err error
 
 	// Load init commands
-	dotInit, err := dotsql.LoadFromFile("sql/init.sql")
+	dotInit, err := dotsql.LoadFromString(string(MustAsset("sql/init.sql")))
 	if err != nil {
-		fmt.Printf("Failed to open the database init file: %s\n", err.Error())
-		os.Exit(1)
+		panic(err)
 	}
 
 	// Load alter commands
-	s.dotAlter, err = dotsql.LoadFromFile("sql/alter.sql")
+	s.dotAlter, err = dotsql.LoadFromString(string(MustAsset("sql/alter.sql")))
 	if err != nil {
-		fmt.Printf("Failed to open the database alter command file: %s\n", err.Error())
-		os.Exit(1)
+		panic(err)
 	}
 
 	// Load select commands
-	s.dotSelect, err = dotsql.LoadFromFile("sql/select.sql")
+	s.dotSelect, err = dotsql.LoadFromString(string(MustAsset("sql/select.sql")))
 	if err != nil {
-		fmt.Printf("Failed to open the database select command file: %s\n", err.Error())
-		os.Exit(1)
+		panic(err)
 	}
 
 	// Open database file
@@ -90,29 +88,38 @@ func main() {
 	//gin.SetMode(gin.ReleaseMode)
 	s.router = gin.Default()
 
-	s.router.StaticFile("/scripts/Chart.min.js", "node_modules/chart.js/dist/Chart.min.js")
-	s.router.StaticFile("/css/main.css", "css/main.css")
-	s.router.Static("/fonts/", "fonts/")
-	s.router.SetFuncMap(template.FuncMap{
-		"dict": func(values ...interface{}) (map[string]interface{}, error) {
-			if len(values)%2 != 0 {
-				return nil, errors.New("invalid dict call")
-			}
-			dict := make(map[string]interface{}, len(values)/2)
-			for i := 0; i < len(values); i += 2 {
-				key, ok := values[i].(string)
-				if !ok {
-					return nil, errors.New("dict keys must be strings")
-				}
-				dict[key] = values[i+1]
-			}
-			return dict, nil
-		},
-	})
-	s.router.LoadHTMLGlob("templates/*.html")
+	//s.router.SetFuncMap(templateFunctionMap())
 
-	s.router.GET("/", s.indexHandler)
-	s.router.GET("/playsByTime/*usernames", s.playsByTimeHandler)
+	// Load template file names from Asset
+	templateNames, err := AssetDir("templates")
+	if err != nil {
+		panic(err)
+	}
+
+	// Create a base template where we add the template functions
+	tmpl := template.New("")
+	tmpl.Funcs(templateFunctionMap())
+
+	// Iterate trough template files, load them into multitemplate
+	multiT := multitemplate.New()
+	for _, templateName := range templateNames {
+		basename := templateName[:len(templateName)-5]
+		tmpl := tmpl.New(basename)
+		tmpl, err := tmpl.Parse(string(MustAsset("templates/" + templateName)))
+		if err != nil {
+			panic(err)
+		}
+		multiT.Add(basename, tmpl)
+		fmt.Printf("Loaded templates/%s as %s\n", templateName, templateName[:len(templateName)-5])
+	}
+	// multitemplate is our new HTML renderer
+	s.router.HTMLRender = multiT
+
+	s.router.StaticFS("/scripts/", &assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, AssetInfo: AssetInfo, Prefix: "node_modules/chart.js/dist"})
+	s.router.StaticFS("/css/", &assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, AssetInfo: AssetInfo, Prefix: "css"})
+
+	s.router.Any("/", s.indexHandler)
+	s.router.Any("/playsByTime/*usernames", s.playsByTimeHandler)
 	s.router.POST("/webhook", s.backendHandler)
 
 	s.router.Run(":8080")
