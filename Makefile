@@ -21,6 +21,16 @@ debug: BINDATA_FLAGS=$(BINDATA_FLAGS_DEBUG)
 debug: build
 
 
+dependencies:
+	go get -u github.com/gin-gonic/gin
+	go get -u github.com/mattn/go-isatty
+	go get -u github.com/jteeuwen/go-bindata/...
+	go get -u github.com/elazarl/go-bindata-assetfs/...
+	go get -u github.com/mattn/go-sqlite3
+	go get -u github.com/gchaincl/dotsql
+	go get -u github.com/gin-contrib/multitemplate
+	go install github.com/mattn/go-sqlite3
+
 clean:
 	rm -Rf ./bin ./css ./bindata.go ./node_modules
 
