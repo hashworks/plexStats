@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	// gin/logger.go might report undefined: isatty.IsCygwinTerminal
@@ -14,6 +15,14 @@ import (
 	"html/template"
 	"net/http"
 	"os"
+)
+
+var (
+	// Set the following uppercase three with -ldflags "-X main.VERSION=v1.2.3 [...]"
+	VERSION      string = "unknown"
+	BUILD_COMMIT string = "unknown"
+	BUILD_DATE   string = "unknown"
+	versionFlag  bool
 )
 
 type server struct {
@@ -30,6 +39,28 @@ func (s server) internalServerError(c *gin.Context, err string) {
 }
 
 func main() {
+	flagSet := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+
+	flagSet.BoolVar(&versionFlag, "version", false, "")
+
+	flagSet.Parse(os.Args[1:])
+
+	switch {
+	case versionFlag:
+		fmt.Println("plexStats")
+		fmt.Println("https://github.com/hashworks/plexStats")
+		fmt.Println("Version: " + VERSION)
+		fmt.Println("Commit: " + BUILD_COMMIT)
+		fmt.Println("Build date: " + BUILD_DATE)
+		fmt.Println()
+		fmt.Println("Published under the GNU General Public License v3.0.")
+	default:
+		run()
+	}
+}
+
+func run() {
+
 	var s server
 	var err error
 
