@@ -13,8 +13,11 @@ SASS_FLAGS_DEBUG=-t nested -l
 
 build: bin/plexStats
 
-run: bin/plexStats
+run: build
 	bin/plexStats
+
+distribute: build
+	./distribute.sh
 
 debug: SASS_FLAGS=$(SASS_FLAGS_DEBUG)
 debug: BINDATA_FLAGS=$(BINDATA_FLAGS_DEBUG)
