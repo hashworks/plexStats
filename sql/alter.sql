@@ -130,7 +130,7 @@ INSERT INTO media(
 -- name: insert-event
 INSERT INTO event(date, type, rating, local, owned, accountNumber, sUUID, cUUID, mGUID, aId) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
--- name: insert-filter
+-- name: update-filter
 UPDATE filter SET tag = ?, filter = ?, role = ?, thumb = ?, count = ? WHERE fId = ?;
 
 -- name: insert-filter
