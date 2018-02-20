@@ -118,8 +118,8 @@ func main() {
 	s.router.StaticFS("/scripts/", &assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, AssetInfo: AssetInfo, Prefix: "node_modules/chart.js/dist"})
 	s.router.StaticFS("/css/", &assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, AssetInfo: AssetInfo, Prefix: "css"})
 
-	s.router.Any("/", s.indexHandler)
-	s.router.Any("/playsByTime/*usernames", s.playsByTimeHandler)
+	s.router.GET("/", s.indexHandler)
+	s.router.GET("/playsByTime/*usernames", s.playsByTimeHandler)
 	s.router.POST("/webhook", s.backendHandler)
 
 	s.router.Run(":8080")
