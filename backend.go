@@ -41,12 +41,11 @@ func (s server) backendHandler(c *gin.Context) {
 		// Begin transaction
 		if tx, err := s.db.Begin(); err == nil {
 			// Create rollback function in case shit goes downhill
-			rollback := func(error string) {
+			rollback := func(where string, error string) {
 				// TODO: Better error logging
 				tx.Rollback()
-				fmt.Println(error)
+				fmt.Printf("Rollback at '%s' with error '%s'\n", where, error)
 				c.Status(http.StatusInternalServerError)
-				os.Exit(1) // TODO: Remove after debug
 			}
 
 			/**
@@ -60,12 +59,12 @@ func (s server) backendHandler(c *gin.Context) {
 			serverUpdateStmt, err := s.dotAlter.Prepare(tx, "update-server")
 			defer serverUpdateStmt.Close()
 			if err != nil {
-				rollback(err.Error())
+				rollback("update-server prepare", err.Error())
 				return
 			}
 			serverUpdateResult, err := serverUpdateStmt.Exec(event.Server.Name, event.Server.UUID)
 			if err != nil {
-				rollback(err.Error())
+				rollback("update-server exec", err.Error())
 				return
 			}
 			if serverUpdateRowCount, err := serverUpdateResult.RowsAffected(); err != nil || serverUpdateRowCount == 0 {
@@ -73,12 +72,12 @@ func (s server) backendHandler(c *gin.Context) {
 				serverStmt, err := s.dotAlter.Prepare(tx, "insert-server")
 				defer serverStmt.Close()
 				if err != nil {
-					rollback(err.Error())
+					rollback("insert-server prepare", err.Error())
 					return
 				}
 				_, err = serverStmt.Exec(event.Server.UUID, event.Server.Name)
 				if err != nil {
-					rollback(err.Error())
+					rollback("insert-server exec", err.Error())
 					return
 				}
 			}
@@ -90,12 +89,12 @@ func (s server) backendHandler(c *gin.Context) {
 			accountUpdateStmt, err := s.dotAlter.Prepare(tx, "update-account")
 			defer accountUpdateStmt.Close()
 			if err != nil {
-				rollback(err.Error())
+				rollback("update-account prepare", err.Error())
 				return
 			}
 			accountUpdateResult, err := accountUpdateStmt.Exec(event.Account.Name, event.Account.Thumb, event.Account.ID)
 			if err != nil {
-				rollback(err.Error())
+				rollback("update-account exec", err.Error())
 				return
 			}
 			if accountUpdateRowCount, err := accountUpdateResult.RowsAffected(); err != nil || accountUpdateRowCount == 0 {
@@ -103,12 +102,12 @@ func (s server) backendHandler(c *gin.Context) {
 				accountStmt, err := s.dotAlter.Prepare(tx, "insert-account")
 				defer accountStmt.Close()
 				if err != nil {
-					rollback(err.Error())
+					rollback("insert-account prepare", err.Error())
 					return
 				}
 				_, err = accountStmt.Exec(event.Account.ID, event.Account.Name, event.Account.Thumb)
 				if err != nil {
-					rollback(err.Error())
+					rollback("insert-account exec", err.Error())
 					return
 				}
 			}
@@ -121,7 +120,7 @@ func (s server) backendHandler(c *gin.Context) {
 			lastAddressQuery, err := s.dotAlter.Prepare(tx, "select-address-id-by-ip")
 			defer lastAddressQuery.Close()
 			if err != nil {
-				rollback(err.Error())
+				rollback("select-address-id-by-ip prepare", err.Error())
 				return
 			}
 			err = lastAddressQuery.QueryRow(event.Player.Address).Scan(&addressId)
@@ -130,17 +129,17 @@ func (s server) backendHandler(c *gin.Context) {
 				addressStmt, err := s.dotAlter.Prepare(tx, "insert-address")
 				defer addressStmt.Close()
 				if err != nil {
-					rollback(err.Error())
+					rollback("insert-address prepare", err.Error())
 					return
 				}
 				addressResult, err := addressStmt.Exec(event.Player.Address)
 				if err != nil {
-					rollback(err.Error())
+					rollback("insert-address exec", err.Error())
 					return
 				}
 				addressId, err = addressResult.LastInsertId()
 				if err != nil {
-					rollback(err.Error())
+					rollback("addressId", err.Error())
 					return
 				}
 			}
@@ -152,12 +151,12 @@ func (s server) backendHandler(c *gin.Context) {
 			clientUpdateStmt, err := s.dotAlter.Prepare(tx, "update-client")
 			defer clientUpdateStmt.Close()
 			if err != nil {
-				rollback(err.Error())
+				rollback("update-client prepare", err.Error())
 				return
 			}
 			clientUpdateResult, err := clientUpdateStmt.Exec(event.Player.Name, event.Player.UUID)
 			if err != nil {
-				rollback(err.Error())
+				rollback("update-client exec", err.Error())
 				return
 			}
 			if clientUpdateRowCount, err := clientUpdateResult.RowsAffected(); err != nil || clientUpdateRowCount == 0 {
@@ -165,12 +164,12 @@ func (s server) backendHandler(c *gin.Context) {
 				clientStmt, err := s.dotAlter.Prepare(tx, "insert-client")
 				defer clientStmt.Close()
 				if err != nil {
-					rollback(err.Error())
+					rollback("insert-client prepare", err.Error())
 					return
 				}
 				_, err = clientStmt.Exec(event.Player.UUID, event.Player.Name)
 				if err != nil {
-					rollback(err.Error())
+					rollback("insert-client exec", err.Error())
 					return
 				}
 			}
@@ -191,7 +190,7 @@ func (s server) backendHandler(c *gin.Context) {
 			} else if event.Metadata.IsClip() {
 				mediaType = "clip"
 			} else {
-				rollback(fmt.Sprintf("Unknown media type '%s'", event.Metadata.Type))
+				rollback("mediaType", fmt.Sprintf("Unknown media type '%s'", event.Metadata.Type))
 				return
 			}
 
@@ -199,7 +198,7 @@ func (s server) backendHandler(c *gin.Context) {
 			if event.Metadata.IsTrailer() {
 				subType = "trailer"
 			} else if event.Metadata.SubType != "" {
-				rollback(fmt.Sprintf("Unknown media subtype '%s'", event.Metadata.SubType))
+				rollback("subtype", fmt.Sprintf("Unknown media subtype '%s'", event.Metadata.SubType))
 				return
 			}
 
@@ -215,7 +214,7 @@ func (s server) backendHandler(c *gin.Context) {
 			mediaUpdateStmt, err := s.dotAlter.Prepare(tx, "update-media")
 			defer mediaUpdateStmt.Close()
 			if err != nil {
-				rollback(err.Error())
+				rollback("update-media prepare", err.Error())
 				return
 			}
 
@@ -271,7 +270,7 @@ func (s server) backendHandler(c *gin.Context) {
 
 				event.Metadata.GUID)
 			if err != nil {
-				rollback(err.Error())
+				rollback("update-media exec", err.Error())
 				return
 			}
 
@@ -280,7 +279,7 @@ func (s server) backendHandler(c *gin.Context) {
 				mediaStmt, err := s.dotAlter.Prepare(tx, "insert-media")
 				defer mediaStmt.Close()
 				if err != nil {
-					rollback(err.Error())
+					rollback("insert-media prepare", err.Error())
 					return
 				}
 				_, err = mediaStmt.Exec(
@@ -335,7 +334,7 @@ func (s server) backendHandler(c *gin.Context) {
 					event.Metadata.AddedAt().Format(time.RFC3339),
 					event.Metadata.UpdatedAt().Format(time.RFC3339))
 				if err != nil {
-					rollback(err.Error())
+					rollback("insert-media exec", err.Error())
 					return
 				}
 			}
@@ -358,14 +357,14 @@ func (s server) backendHandler(c *gin.Context) {
 			} else if event.IsMediaScrobble() {
 				eventType = "scrobble"
 			} else {
-				rollback(fmt.Sprintf("Unknown event type '%s'", event.Type))
+				rollback("eventType", fmt.Sprintf("Unknown event type '%s'", event.Type))
 				return
 			}
 
 			eventStmt, err := s.dotAlter.Prepare(tx, "insert-event")
 			defer eventStmt.Close()
 			if err != nil {
-				rollback(err.Error())
+				rollback("insert-event prepare", err.Error())
 				return
 			}
 
@@ -373,7 +372,7 @@ func (s server) backendHandler(c *gin.Context) {
 			_, err = eventStmt.Exec(t.Format(time.RFC3339), eventType, event.Rating, event.Player.Local,
 				event.Owned, event.Account.ID, event.Server.UUID, event.Player.UUID, event.Metadata.GUID, addressId)
 			if err != nil {
-				rollback(err.Error())
+				rollback("insert-event exec", err.Error())
 				return
 			}
 
@@ -402,12 +401,12 @@ func (s server) backendHandler(c *gin.Context) {
 						filterUpdateStmt, err := s.dotAlter.Prepare(tx, "update-filter")
 						defer filterUpdateStmt.Close()
 						if err != nil {
-							rollback(err.Error())
+							rollback("update-filter prepare", err.Error())
 							return
 						}
 						filterUpdateResult, err := filterUpdateStmt.Exec(filter.Tag, filter.Filter, filter.Role, filter.Thumb, filter.Count, filter.Id)
 						if err != nil {
-							rollback(err.Error())
+							rollback("update-filter exec", err.Error())
 							return
 						}
 						if filterUpdateRowCount, err := filterUpdateResult.RowsAffected(); err != nil || filterUpdateRowCount == 0 {
@@ -415,12 +414,12 @@ func (s server) backendHandler(c *gin.Context) {
 							filterStmt, err := s.dotAlter.Prepare(tx, "insert-filter")
 							defer filterStmt.Close()
 							if err != nil {
-								rollback(err.Error())
+								rollback("insert-filter prepare", err.Error())
 								return
 							}
 							_, err = filterStmt.Exec(filter.Id, filter.Tag, filter.Filter, filter.Role, filter.Thumb, filter.Count)
 							if err != nil {
-								rollback(err.Error())
+								rollback("insert-filter exec", err.Error())
 								return
 							}
 						}
@@ -428,12 +427,12 @@ func (s server) backendHandler(c *gin.Context) {
 						relationStmt, err := tx.Prepare(fmt.Sprintf("INSERT OR IGNORE INTO %s(guid, fId) VALUES(?, ?)", relationTable))
 						defer relationStmt.Close()
 						if err != nil {
-							rollback(err.Error())
+							rollback("add-relation prepare", err.Error())
 							return
 						}
 						_, err = relationStmt.Exec(event.Metadata.GUID, filter.Id)
 						if err != nil {
-							rollback(err.Error())
+							rollback("add-relation exec", err.Error())
 							return
 						}
 					}()
@@ -446,14 +445,14 @@ func (s server) backendHandler(c *gin.Context) {
 		} else {
 			// Failed to create the transaction, stop
 			// TODO: Better error logging
-			fmt.Println(err.Error())
+			fmt.Printf("Failed to create the transaction: %s\n", err.Error())
 			c.Status(http.StatusInternalServerError)
 			return
 		}
 	} else {
 		// Failed to parse the JSON, stop
 		// TODO: Better error logging
-		fmt.Println(err.Error())
+		fmt.Printf("Failed to parse JSON: %s\n", err.Error())
 		c.Status(http.StatusBadRequest)
 		return
 	}
