@@ -1,10 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"os"
 	"time"
 )
 
@@ -17,9 +17,27 @@ func (s server) backendHandler(c *gin.Context) {
 		t = time.Now()
 	}
 
+	// Read payload
+	payload, err := c.FormFile("payload")
+	if err != nil {
+		fmt.Printf("Failed to read payload: %s\n", err.Error())
+		c.Status(http.StatusBadRequest)
+		return
+	}
+
+	// Open payload
+	payloadFile, err := payload.Open()
+	defer payloadFile.Close()
+	if err != nil {
+		fmt.Printf("Failed to open payload: %s\n", err.Error())
+		c.Status(http.StatusBadRequest)
+		return
+	}
+
 	// Parse JSON
+	jsonParser := json.NewDecoder(payloadFile)
 	var event Event
-	if err := c.ShouldBindJSON(&event); err == nil {
+	if err := jsonParser.Decode(&event); err == nil {
 		// Begin transaction
 		if tx, err := s.db.Begin(); err == nil {
 			// Create rollback function in case shit goes downhill
