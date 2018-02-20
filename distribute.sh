@@ -32,8 +32,8 @@ if [ "$commit" == "" ]; then
 fi
 
 if [ "$1" == "" ]; then
-	version=$(git tag)
-    echo You didn\'t provide a version string as the first parameter, setting version to \"${version}\".
+    version=$(git tag)
+    echo You didn\'t provide a version string as the first parameter, setting version to the current git tag \"${version}\".
 else
     version="$1"
 fi
