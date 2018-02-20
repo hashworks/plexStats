@@ -16,6 +16,7 @@ func (s server) indexHandler(c *gin.Context) {
 	)
 
 	rows, err := s.dotSelect.Query(s.db, "count-events")
+	defer rows.Close()
 	if err != nil {
 		s.internalServerError(c, err.Error())
 		return
@@ -28,6 +29,7 @@ func (s server) indexHandler(c *gin.Context) {
 	}
 
 	rows, err = s.dotSelect.Query(s.db, "count-accounts")
+	defer rows.Close()
 	if err != nil {
 		s.internalServerError(c, err.Error())
 		return
@@ -40,6 +42,7 @@ func (s server) indexHandler(c *gin.Context) {
 	}
 
 	rows, err = s.dotSelect.Query(s.db, "count-clients")
+	defer rows.Close()
 	if err != nil {
 		s.internalServerError(c, err.Error())
 		return
@@ -52,6 +55,7 @@ func (s server) indexHandler(c *gin.Context) {
 	}
 
 	rows, err = s.dotSelect.Query(s.db, "count-movies")
+	defer rows.Close()
 	if err != nil {
 		s.internalServerError(c, err.Error())
 		return
@@ -64,6 +68,7 @@ func (s server) indexHandler(c *gin.Context) {
 	}
 
 	rows, err = s.dotSelect.Query(s.db, "count-episodes")
+	defer rows.Close()
 	if err != nil {
 		s.internalServerError(c, err.Error())
 		return
@@ -76,6 +81,7 @@ func (s server) indexHandler(c *gin.Context) {
 	}
 
 	rows, err = s.dotSelect.Query(s.db, "count-tracks")
+	defer rows.Close()
 	if err != nil {
 		s.internalServerError(c, err.Error())
 		return

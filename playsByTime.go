@@ -40,8 +40,10 @@ func (s server) playsByTimeHandler(c *gin.Context) {
 		}
 		queryBuffer.WriteString(") GROUP BY month ORDER BY month ASC")
 		monthRows, err = s.db.Query(queryBuffer.String())
+		defer monthRows.Close()
 	} else {
 		monthRows, err = s.dotSelect.Query(s.db, "select-plays-by-month")
+		defer monthRows.Close()
 	}
 
 	if err != nil {
@@ -85,8 +87,10 @@ func (s server) playsByTimeHandler(c *gin.Context) {
 		}
 		queryBuffer.WriteString(") GROUP BY hour")
 		hourRows, err = s.db.Query(queryBuffer.String())
+		defer hourRows.Close()
 	} else {
 		hourRows, err = s.dotSelect.Query(s.db, "select-plays-by-hour")
+		defer hourRows.Close()
 	}
 
 	if err != nil {
@@ -108,6 +112,7 @@ func (s server) playsByTimeHandler(c *gin.Context) {
 	}
 
 	usernameRows, err := s.dotSelect.Query(s.db, "select-usernames")
+	defer usernameRows.Close()
 
 	if err != nil {
 		s.internalServerError(c, err.Error())
