@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS event(
   FOREIGN KEY(aId) REFERENCES address
 );
 
+-- Note: This trigger isn't specifically required, but we should "include at least one trigger" according to my prof.
 -- name: create-trigger-rating
 CREATE TRIGGER IF NOT EXISTS ratingTrigger AFTER INSERT ON event -- When type isn't userRating we want rating to be NULL
   WHEN NEW.type IS NOT 'userRating' AND NEW.rating IS NOT NULL BEGIN
