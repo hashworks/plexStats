@@ -32,8 +32,8 @@ if [ "$commit" == "" ]; then
 fi
 
 if [ "$1" == "" ]; then
-    echo You didn\'t provide a version string as the first parameter, setting version to \"unknown\".
-    version="unknown"
+	version=$(git tag)
+    echo You didn\'t provide a version string as the first parameter, setting version to \"${version}\".
 else
     version="$1"
 fi
