@@ -82,19 +82,26 @@ for plat in "${platforms[@]}"; do
     fi
 
     if [ "$GOOS" != "windows" ]; then
-        tarPath="$DIR"/bin/${name}-"$plat".tar.gz
-        echo Build succeeded, creating "$tarPath" ...
-        tar -czf "$tarPath" -C "${tmpFile%/*}" ${name}
+        finalPath="$DIR"/bin/${name}-"$plat".tar.gz
+        echo Build succeeded, creating "$finalPath" ...
+        tar -czf "$finalPath" -C "${tmpFile%/*}" ${name}
     else
-        zipPath="$DIR"/bin/${name}-"$plat".zip
-        echo Build succeeded, creating "$zipPath" ...
-        zip -j "$zipPath" "$tmpFile"
+        finalPath="$DIR"/bin/${name}-"$plat".zip
+        echo Build succeeded, creating "$finalPath" ...
+        zip -j "$finalPath" "$tmpFile"
     fi
 
     if [ "$?" != 0 ]; then
         echo Failed to pack the binary! >&2
         exit "$?"
     fi
+
+    echo "Signing…"
+    if ! gpg --armor --detach-sign "$finalPath"; then
+        echo Failed to sign the package! >&2
+        exit "$?"
+    fi
+
     echo Done!
 
     rm "$tmpFile"
