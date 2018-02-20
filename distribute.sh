@@ -33,7 +33,7 @@ if [ "$commit" == "" ]; then
 fi
 
 if [ "$1" == "" ]; then
-    version=$(git tag)
+    version=$(git tag | tail -1)
     echo You didn\'t provide a version string as the first parameter, setting version to the current git tag \"${version}\".
 else
     version="$1"
