@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 
 name=plexStats
+export CGO_ENABLED=1
+
+platforms=(
+    linux-amd64 windows-amd64
+    linux-386 windows-386
+    linux-armv5 linux-armv6 linux-armv7
+    #linux-armv8
+)
 
 checkCommand() {
     which "$1" >/dev/null 2>&1
@@ -15,13 +23,6 @@ checkCommand tar
 checkCommand zip
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-# NOTE: The build process is somewhat similar to https://github.com/syncthing/syncthing, thanks for that!
-platforms=(
-    linux-amd64 windows-amd64 darwin-amd64 dragonfly-amd64 freebsd-amd64 netbsd-amd64 openbsd-amd64 solaris-amd64
-    freebsd-386 linux-386 netbsd-386 openbsd-386 windows-386
-    linux-arm linux-arm64 linux-ppc64 linux-ppc64le
-)
 
 cd "$DIR"
 commit="$(git rev-parse --short HEAD 2>/dev/null)"
@@ -42,10 +43,8 @@ rm -Rf ./bin/
 mkdir ./bin/ 2>/dev/null
 
 for plat in "${platforms[@]}"; do
-    echo Building "$plat" ...
-
-    GOOS="${plat%-*}"
-    GOARCH="${plat#*-}"
+    export GOOS="${plat%-*}"
+    export GOARCH="${plat#*-}"
 
     if [ "$GOOS" != "windows" ]; then
         tmpFile="/tmp/${name}/bin/${name}"
@@ -53,7 +52,28 @@ for plat in "${platforms[@]}"; do
         tmpFile="/tmp/${name}/bin/${name}.exe"
     fi
 
-    GOOS="${plat%-*}" GOARCH="${plat#*-}" go build -ldflags '-X main.VERSION='"$version"' -X main.BUILD_COMMIT='"$commit"' -X main.BUILD_DATE='"$date" \
+    if [ "$CGO_ENABLED" == 1 ]; then
+        if [ "$plat" = "windows-amd64" ]; then
+            export CC=x86_64-w64-mingw32-gcc
+        elif [ "$plat" = "windows-386" ]; then
+            export CC=i686-w64-mingw32-gcc
+        elif [ "${GOARCH%v*}" = "arm" ]; then
+            export GOARM="${GOARCH#*v}"
+            if [ "GOARM" = 8 ]; then
+                unset GOARM=""
+                export CC=armv8l-linux-gnueabihf-gcc
+                export GOARCH="arm64"
+            else
+                export CC=arm-linux-gnueabihf-gcc
+                export GOARCH="arm"
+            fi
+        else
+            export CC=gcc
+        fi
+    fi
+
+    echo Building "$plat" with "$CC" ...
+    go build -ldflags '-extld='"$CC"' -X main.VERSION='"$version"' -X main.BUILD_COMMIT='"$commit"' -X main.BUILD_DATE='"$date" \
     -o "$tmpFile" "$DIR"/*.go
 
     if [ "$?" != 0 ]; then
