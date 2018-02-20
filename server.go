@@ -23,6 +23,8 @@ var (
 	BUILD_COMMIT string = "unknown"
 	BUILD_DATE   string = "unknown"
 	versionFlag  bool
+	address      string
+	port         int
 )
 
 type server struct {
@@ -41,7 +43,9 @@ func (s server) internalServerError(c *gin.Context, err string) {
 func main() {
 	flagSet := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
-	flagSet.BoolVar(&versionFlag, "version", false, "")
+	flagSet.BoolVar(&versionFlag, "version", false, "Displays the version and license information.")
+	flagSet.StringVar(&address, "address", "127.0.0.1", "The address to listen on.")
+	flagSet.IntVar(&port, "port", 65431, "The port to listen on.")
 
 	flagSet.Parse(os.Args[1:])
 
@@ -153,5 +157,5 @@ func run() {
 	s.router.GET("/playsByTime/*usernames", s.playsByTimeHandler)
 	s.router.POST("/webhook", s.backendHandler)
 
-	s.router.Run(":65431")
+	s.router.Run(fmt.Sprintf("%s:%d", address, port))
 }
