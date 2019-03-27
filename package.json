@@ -1,6 +1,7 @@
 {
   "name": "plexStats",
   "dependencies": {
-    "chart.js": "^2.7.1"
+    "chart.js": "^2.8.0",
+    "moment": "^2.19.3"
   }
 }
