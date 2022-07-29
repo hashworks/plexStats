@@ -1,12 +1,12 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
-
 	"bytes"
 	"database/sql"
 	"net/http"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 func parseUsernames(param string) []string {

@@ -3,9 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
+	"io/ioutil"
 	"net/http"
+	"os"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 func (s server) backendHandler(c *gin.Context) {
@@ -18,7 +21,7 @@ func (s server) backendHandler(c *gin.Context) {
 	}
 
 	jsonData, exists := c.GetPostForm("payload")
-	if ! exists {
+	if !exists {
 		fmt.Println("No payload found.")
 		c.Status(http.StatusBadRequest)
 		return
@@ -442,6 +445,17 @@ func (s server) backendHandler(c *gin.Context) {
 		// Failed to parse the JSON, stop
 		// TODO: Better error logging
 		fmt.Printf("Failed to parse JSON: %s\n", err.Error())
+
+		// Plex changes their JSON format quite often, so we need a way to log this
+		tmpDir, err := ioutil.TempDir("", "")
+		if err == nil {
+			file, err := os.Create(tmpDir + string(os.PathSeparator) + "invalid_plex_webhook_body.json")
+			if err == nil {
+				defer file.Close()
+				file.WriteString(jsonData)
+			}
+		}
+
 		c.Status(http.StatusBadRequest)
 		return
 	}
