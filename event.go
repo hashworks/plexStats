@@ -133,6 +133,12 @@ type Metadata struct {
 	Genre      []Filter `json:"Genre"`
 	Country    []Filter `json:"Country"`
 	Collection []Filter `json:"Collection"`
+
+	Guids []Guid `json:"Guid"` // We need to handle this case since the Golang JSON decoder is case-insensitive https://pkg.go.dev/encoding/json#Unmarshal
+}
+
+type Guid struct {
+	Id string `json:"id"`
 }
 
 func (m Metadata) IsEpisode() bool {
