@@ -1,3 +1,7 @@
+**Warning: This project is no longer maintainted. It currently won't work with the Plex Webhooks payload, since Plex changes their JSON format without notice and without any versioning.**
+
+---
+
 # plexStats
 
 plexStats is a project I did at my university ([HTWK Leipzig](https://www.htwk-leipzig.de/startseite/))
