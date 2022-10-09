@@ -14,45 +14,27 @@ type Event struct {
 }
 
 func (e Event) IsMediaPlay() bool {
-	if e.Type == "media.play" {
-		return true
-	}
-	return false
+	return e.Type == "media.play"
 }
 
 func (e Event) IsMediaPause() bool {
-	if e.Type == "media.pause" {
-		return true
-	}
-	return false
+	return e.Type == "media.pause"
 }
 
 func (e Event) IsMediaResume() bool {
-	if e.Type == "media.resume" {
-		return true
-	}
-	return false
+	return e.Type == "media.resume"
 }
 
 func (e Event) IsMediaStop() bool {
-	if e.Type == "media.stop" {
-		return true
-	}
-	return false
+	return e.Type == "media.stop"
 }
 
 func (e Event) IsMediaScrobble() bool {
-	if e.Type == "media.scrobble" {
-		return true
-	}
-	return false
+	return e.Type == "media.scrobble"
 }
 
 func (e Event) IsMediaRating() bool {
-	if e.Type == "media.rate" {
-		return true
-	}
-	return false
+	return e.Type == "media.rate"
 }
 
 type Server struct {
@@ -142,45 +124,27 @@ type Guid struct {
 }
 
 func (m Metadata) IsEpisode() bool {
-	if m.Type == "episode" {
-		return true
-	}
-	return false
+	return m.Type == "episode"
 }
 
 func (m Metadata) IsMovie() bool {
-	if m.Type == "movie" {
-		return true
-	}
-	return false
+	return m.Type == "movie"
 }
 
 func (m Metadata) IsTrack() bool {
-	if m.Type == "track" {
-		return true
-	}
-	return false
+	return m.Type == "track"
 }
 
 func (m Metadata) IsClip() bool {
-	if m.Type == "clip" {
-		return true
-	}
-	return false
+	return m.Type == "clip"
 }
 
 func (m Metadata) IsTrailer() bool {
-	if m.SubType == "trailer" {
-		return true
-	}
-	return false
+	return m.SubType == "trailer"
 }
 
 func (m Metadata) IsImage() bool {
-	if m.Type == "image" {
-		return true
-	}
-	return false
+	return m.Type == "image"
 }
 
 func (m Metadata) UpdatedAt() time.Time {
